@@ -109,52 +109,11 @@
   }
   .overlay .big { font-size: 64px; line-height: 1; }
 
-  /* cake */
-  .cake { display: flex; flex-direction: column; align-items: center; margin: 22px 0 26px; }
-  .candles { display: flex; justify-content: center; align-items: flex-end; height: 76px; width: 176px; gap: 10px; }
-  .candle {
-    appearance: none; border: 0; padding: 0; cursor: pointer; position: relative;
-    width: 10px; height: 42px; border-radius: 3px;
-    background: repeating-linear-gradient(45deg, #fff 0 5px, var(--rose) 5px 10px);
-    touch-action: manipulation;
-  }
-  .candle::before { content: ""; position: absolute; inset: -34px -7px -4px; } /* bigger tap target */
-  .flame {
-    position: absolute; bottom: calc(100% + 2px); left: 50%; width: 12px; height: 20px; margin-left: -6px;
-    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-    background: radial-gradient(circle at 50% 70%, #fffbd1, #ffc93c 55%, #ff6a00);
-    box-shadow: 0 0 14px 4px rgba(255, 190, 60, .55);
-    transform-origin: 50% 100%;
-    animation: flicker .18s ease-in-out infinite alternate;
-    transition: opacity .25s, transform .25s;
-  }
-  @keyframes flicker { from { transform: scale(1) rotate(-3deg); } to { transform: scale(1.06, .93) rotate(3deg); } }
-  .candle.out .flame { opacity: 0; transform: scale(.2); animation: none; }
-  .candle.out::after {
-    content: ""; position: absolute; bottom: 100%; left: 50%; width: 7px; height: 7px; margin-left: -3.5px;
-    border-radius: 50%; background: rgba(230, 230, 230, .75); animation: smoke 1.3s ease-out forwards;
-  }
-  @keyframes smoke { to { transform: translateY(-46px) scale(3.2); opacity: 0; } }
-  .tier { position: relative; border-radius: 14px 14px 8px 8px; background: #ffb3c6; }
-  .tier::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 16px; background: #fff; border-radius: 14px 14px 0 0; }
-  .tier::after {
-    content: ""; position: absolute; left: 0; right: 0; top: 15px; height: 12px;
-    background: radial-gradient(circle at 10px 0, #fff 8px, transparent 9px) 0 0 / 20px 12px repeat-x;
-  }
-  .tier.top { width: 186px; height: 72px; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 6px; }
-  .tier.bottom { width: 256px; height: 92px; background: #ff8fab; }
-  .age { position: relative; z-index: 1; font: 700 34px var(--script); color: #fff; text-shadow: 0 2px 6px rgba(194, 24, 91, .5); }
-  .plate { width: 296px; height: 18px; border-radius: 50%; background: #f3e6ff; box-shadow: 0 10px 22px rgba(0, 0, 0, .3); }
   .row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
   /* ask */
   .ask-emoji { font-size: 84px; line-height: 1; margin: 10px 0 18px; }
   #yesBtn { transition: transform .3s cubic-bezier(.3, 1.6, .5, 1); }
-  #noBtn { white-space: nowrap; }
-  #noBtn.runaway {
-    position: fixed; z-index: 5; padding: 10px 18px; min-height: 44px; font-size: 16px;
-    background: var(--bg-2); transition: left .25s ease, top .25s ease;
-  }
 
   /* letter */
   .card {
@@ -195,12 +154,11 @@
   const CONFIG = {
     toName: "My Love",          // who the surprise is for
     fromName: "Me",             // who it's from
-    age: 25,                    // their new age (up to 12 candles are drawn)
     heartsToWin: 14,            // hearts to catch in the mini-game
     question: "Will you be my Valentine?",
     letter: [                   // the love letter — one line per paragraph
-      "Happy Birthday and Happy Valentine's Day!",
-      "Every day with you feels like a celebration, but today is extra special.",
+      "Happy Valentine's Day!",
+      "Every day with you feels like a love story, and today I just want to remind you how much you mean to me.",
       "Thank you for your smile, your laugh, and for making ordinary moments magical.",
       "I can't wait for all the adventures still ahead of us.",
     ],
@@ -219,8 +177,7 @@
     <div class="envelope" aria-hidden="true"><span class="seal">❤️</span></div>
     <h1>Hey <span data-to></span>,</h1>
     <p>Someone made you a little surprise…</p>
-    <p style="opacity:.75;font-size:15px">Turn your sound on 🔊</p>
-    <button class="btn" id="openBtn" style="margin-top:14px">Open it 💌</button>
+        <button class="btn" id="openBtn" style="margin-top:14px">Open it 💌</button>
   </section>
 
   <!-- 2. Mini-game -->
@@ -243,28 +200,12 @@
       <div class="overlay" id="gameWin" hidden>
         <div class="big">💘</div>
         <h2>You caught my heart!</h2>
-        <button class="btn" id="toCake">Next →</button>
+        <button class="btn" id="toAsk">Next →</button>
       </div>
     </div>
   </section>
 
-  <!-- 3. Birthday cake -->
-  <section class="scene" id="cake">
-    <h2 id="cakeTitle">Make a wish, <span data-to></span>!</h2>
-    <p id="cakeHint">Tap the flames to blow out the candles<br>— or tap 🎤 and really blow on your phone</p>
-    <div class="cake" aria-label="Birthday cake">
-      <div class="candles" id="candles"></div>
-      <div class="tier top"><span class="age" id="ageNum"></span></div>
-      <div class="tier bottom"></div>
-      <div class="plate"></div>
-    </div>
-    <div class="row">
-      <button class="btn ghost" id="micBtn">🎤 Blow with mic</button>
-      <button class="btn" id="toAsk" hidden>One more thing →</button>
-    </div>
-  </section>
-
-  <!-- 4. The question -->
+  <!-- 3. The question -->
   <section class="scene" id="ask">
     <div class="ask-emoji" id="askEmoji">🥺</div>
     <h2 id="question"></h2>
@@ -274,7 +215,7 @@
     </div>
   </section>
 
-  <!-- 5. Love letter -->
+  <!-- 4. Love letter -->
   <section class="scene" id="letter">
     <article class="card" id="letterCard">
       <h2>Dear <span data-to></span>,</h2>
@@ -306,7 +247,7 @@
 
   // ---------- scenes ----------
   let current = "intro";
-  const onEnter = { game: enterGame, cake: enterCake, letter: enterLetter };
+  const onEnter = { game: enterGame, letter: enterLetter };
   function show(id) {
     document.querySelectorAll(".scene").forEach((s) => s.classList.toggle("active", s.id === id));
     current = id;
@@ -430,7 +371,7 @@
     G.running = true; G.last = performance.now(); G.spawnIn = 300;
     requestAnimationFrame(loop);
   });
-  $("#toCake").addEventListener("click", () => show("cake"));
+  $("#toAsk").addEventListener("click", () => show("ask"));
 
   function spawn() {
     const r = Math.random();
@@ -491,131 +432,15 @@
     $("#gameWin").hidden = false;
   }
 
-  // ---------- 3. cake ----------
-  let cakeReady = false, cakeFinished = false;
-  const candleBox = $("#candles");
-  function enterCake() {
-    if (cakeReady) return;
-    cakeReady = true;
-    const n = clamp(parseInt(CONFIG.age, 10) || 5, 1, 12);
-    $("#ageNum").textContent = CONFIG.age || "";
-    candleBox.style.gap = n > 8 ? "4px" : n > 5 ? "8px" : "14px";
-    for (let i = 0; i < n; i++) {
-      const c = document.createElement("button");
-      c.className = "candle";
-      c.setAttribute("aria-label", "Blow out candle " + (i + 1));
-      c.innerHTML = '<span class="flame"></span>';
-      c.addEventListener("click", () => blowOut(c));
-      candleBox.appendChild(c);
-    }
-  }
-  function blowOut(c) {
-    if (c.classList.contains("out")) return;
-    c.classList.add("out");
-    buzz(20);
-    if (!candleBox.querySelector(".candle:not(.out)")) cakeDone();
-  }
-  function cakeDone() {
-    if (cakeFinished) return;
-    cakeFinished = true;
-    stopMic();
-    $("#cakeTitle").textContent = "Happy Birthday, " + CONFIG.toName + "! 🎉";
-    $("#cakeHint").textContent = "Your wish is on its way ✨";
-    $("#micBtn").hidden = true;
-    burst(220, innerWidth / 2, innerHeight * 0.4);
-    setTimeout(() => rain(70), 500);
-    if (!music) playBirthdaySong();
-    setTimeout(() => { $("#toAsk").hidden = false; }, 900);
-  }
-  $("#toAsk").addEventListener("click", () => show("ask"));
-
-  // blow into the microphone
-  let micStream = null, micCtx = null;
-  $("#micBtn").addEventListener("click", async () => {
-    if (micStream) return;
-    try {
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      micCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const an = micCtx.createAnalyser();
-      an.fftSize = 512;
-      micCtx.createMediaStreamSource(micStream).connect(an);
-      const buf = new Uint8Array(an.fftSize);
-      let lastBlow = 0;
-      $("#micBtn").textContent = "🎤 Listening… blow!";
-      const tick = (t) => {
-        if (!micStream) return;
-        an.getByteTimeDomainData(buf);
-        let sum = 0;
-        for (let i = 0; i < buf.length; i++) { const x = (buf[i] - 128) / 128; sum += x * x; }
-        if (Math.sqrt(sum / buf.length) > 0.16 && t - lastBlow > 160) {
-          lastBlow = t;
-          const c = candleBox.querySelector(".candle:not(.out)");
-          if (c) blowOut(c);
-        }
-        if (micStream) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    } catch (e) {
-      micStream = null;
-      $("#cakeHint").textContent = "No mic? No problem — just tap the flames 😊";
-      $("#micBtn").hidden = true;
-    }
-  });
-  function stopMic() {
-    if (micStream) micStream.getTracks().forEach((t) => t.stop());
-    micStream = null;
-    if (micCtx) micCtx.close().catch(() => {});
-    micCtx = null;
-  }
-
-  // little "Happy Birthday" melody with WebAudio
-  function playBirthdaySong() {
-    try {
-      const ac = new (window.AudioContext || window.webkitAudioContext)();
-      const N = { G4: 392, A4: 440, B4: 493.88, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99 };
-      const song = [
-        ["G4", .75], ["G4", .25], ["A4", 1], ["G4", 1], ["C5", 1], ["B4", 2],
-        ["G4", .75], ["G4", .25], ["A4", 1], ["G4", 1], ["D5", 1], ["C5", 2],
-        ["G4", .75], ["G4", .25], ["G5", 1], ["E5", 1], ["C5", 1], ["B4", 1], ["A4", 2],
-        ["F5", .75], ["F5", .25], ["E5", 1], ["C5", 1], ["D5", 1], ["C5", 2.5],
-      ];
-      const beat = 0.4;
-      let t = ac.currentTime + 0.15;
-      for (const [note, len] of song) {
-        const o = ac.createOscillator(), g = ac.createGain();
-        o.type = "triangle"; o.frequency.value = N[note];
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(0.22, t + 0.03);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + len * beat * 0.95);
-        o.connect(g).connect(ac.destination);
-        o.start(t); o.stop(t + len * beat);
-        t += len * beat;
-      }
-      setTimeout(() => ac.close().catch(() => {}), (t - ac.currentTime + 1) * 1000);
-    } catch (e) {}
-  }
-
-  // ---------- 4. the question ----------
-  const noTexts = ["No", "Are you sure?", "Really sure??", "Think again 🥺", "Last chance!",
-                   "You're breaking my heart 💔", "Pleeease?", "I'll buy you cake 🎂", "Error: 'No' not found"];
-  const sadFaces = ["🥺", "😢", "😭", "🥹", "💔"];
+  // ---------- 3. the question ----------
+  // "No" does nothing — except make "Yes" a little harder to resist 😄
   let noCount = 0;
   const noBtn = $("#noBtn");
-  function dodge(e) {
-    e.preventDefault();
+  noBtn.addEventListener("click", () => {
     noCount++;
-    noBtn.textContent = noTexts[Math.min(noCount, noTexts.length - 1)];
-    noBtn.classList.add("runaway");
-    const bw = noBtn.offsetWidth, bh = noBtn.offsetHeight;
-    noBtn.style.left = rand(12, Math.max(12, innerWidth - bw - 12)) + "px";
-    noBtn.style.top = rand(12, Math.max(12, innerHeight - bh - 12)) + "px";
-    $("#yesBtn").style.transform = "scale(" + Math.min(1 + noCount * 0.18, 2.4) + ")";
-    $("#askEmoji").textContent = sadFaces[noCount % sadFaces.length];
-    buzz(30);
-  }
-  noBtn.addEventListener("pointerdown", dodge);
-  noBtn.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") dodge(e); });
-  noBtn.addEventListener("click", dodge);
+    $("#yesBtn").style.transform = "scale(" + Math.min(1 + noCount * 0.2, 2.6) + ")";
+    buzz(20);
+  });
   $("#yesBtn").addEventListener("click", () => {
     noBtn.hidden = true;
     $("#askEmoji").textContent = "😍";
@@ -624,7 +449,7 @@
     setTimeout(() => show("letter"), 1100);
   });
 
-  // ---------- 5. love letter ----------
+  // ---------- 4. love letter ----------
   let letterStarted = false, letterDone = false, skipTyping = reduceMotion;
   const body = $("#letterBody");
   $("#letterCard").addEventListener("click", () => { skipTyping = true; });
