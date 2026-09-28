@@ -1,12 +1,12 @@
 # AIBIRTH 💖🎂
 
 Two separate surprise mini-games that run in any phone browser. Each one is a single
-`index.html` file with no app to install and nothing to build.
+HTML file with no app to install and nothing to build.
 
 | Project | Folder | Flow |
 |---|---|---|
-| 💘 **Valentine** | [`valentine/`](valentine/index.html) | Envelope → catch falling hearts → "Will you be my Valentine?" → love letter |
-| 🎂 **Birthday** | [`birthday/`](birthday/index.html) | Envelope → pop the balloons → blow out the candles → birthday card |
+| 💘 **Valentine** | [`valentine/`](valentine/valentine.html) | Envelope → catch falling hearts → "Will you be my Valentine?" → love letter |
+| 🎂 **Birthday** | [`birthday/`](birthday/birthday.html) | Envelope → pop the balloons → blow out the candles → birthday card |
 
 ## 💘 Valentine
 
@@ -24,7 +24,7 @@ Two separate surprise mini-games that run in any phone browser. Each one is a si
 
 ## Personalise
 
-Open the project's `index.html` and edit the `CONFIG` block near the top: names, the
+Open `valentine/valentine.html` or `birthday/birthday.html` and edit the `CONFIG` block near the top: names, the
 letter text, and optional `photos` / `music`. The birthday version also has `age`, which sets the number of candles.
 
 Photos and music go next to the file, for example `valentine/photos/us1.jpg` with
@@ -35,9 +35,11 @@ Photos and music go next to the file, for example `valentine/photos/us1.jpg` wit
 Any static host works, and each folder gets its own link:
 
 - **Netlify Drop**: drag the `valentine` (or `birthday`) folder onto
-  https://app.netlify.com/drop and you get a link instantly.
+  https://app.netlify.com/drop, then add the file name to the link it gives you, for example
+  `https://your-site.netlify.app/valentine.html`.
 - **GitHub Pages**: repo **Settings → Pages → Deploy from a branch**. The links will be
-  `https://<username>.github.io/AIBIRTH/valentine/` and `…/AIBIRTH/birthday/`.
+  `https://<username>.github.io/AIBIRTH/valentine/valentine.html` and
+  `…/AIBIRTH/birthday/birthday.html`.
   (Pages on a *private* repo needs a paid GitHub plan. On a free plan, make the repo public.)
 
 The 🎤 blow feature needs an `https://` link. If the mic isn't allowed, tapping the flames still works.
