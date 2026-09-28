@@ -35,11 +35,13 @@ Photos and music go next to the file, for example `valentine/photos/us1.jpg` wit
 Any static host works, and each folder gets its own link:
 
 - **Netlify Drop**: drag the `valentine` (or `birthday`) folder onto
-  https://app.netlify.com/drop, then add the file name to the link it gives you, for example
-  `https://your-site.netlify.app/valentine.html`.
+  https://app.netlify.com/drop and send the link it gives you, for example
+  `https://your-site.netlify.app/`.
 - **GitHub Pages**: repo **Settings → Pages → Deploy from a branch**. The links will be
-  `https://<username>.github.io/AIBIRTH/valentine/valentine.html` and
-  `…/AIBIRTH/birthday/birthday.html`.
+  `https://<username>.github.io/AIBIRTH/valentine/` and `…/AIBIRTH/birthday/`.
   (Pages on a *private* repo needs a paid GitHub plan. On a free plan, make the repo public.)
+
+Each folder has a tiny `index.html` that jumps straight to the game, which keeps the
+links short. The long form (`…/valentine/valentine.html`) works too.
 
 The 🎤 blow feature needs an `https://` link. If the mic isn't allowed, tapping the flames still works.
