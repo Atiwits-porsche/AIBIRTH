@@ -115,6 +115,39 @@
   .ask-emoji { font-size: 84px; line-height: 1; margin: 10px 0 18px; }
   #yesBtn { transition: transform .3s cubic-bezier(.3, 1.6, .5, 1); }
 
+  /* memory match */
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 400px; margin: 16px 0 20px; }
+  .mcard {
+    appearance: none; border: 0; padding: 0; background: none; cursor: pointer;
+    position: relative; aspect-ratio: 3 / 4; perspective: 600px; touch-action: manipulation;
+  }
+  .mcard .inner { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .45s ease; }
+  .mcard.flipped .inner { transform: rotateY(180deg); }
+  .mcard .face {
+    position: absolute; inset: 0; border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  }
+  .mcard .back {
+    background: linear-gradient(135deg, var(--rose), var(--coral)); color: #fff; font-size: 26px;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, .3);
+  }
+  .mcard .front { background: var(--paper); font-size: clamp(30px, 9vw, 42px); transform: rotateY(180deg); }
+  .mcard.matched .front { box-shadow: 0 0 0 3px var(--coral), 0 0 18px var(--rose); }
+  .mcard:focus-visible { outline: 3px solid var(--blush-strong); outline-offset: 3px; border-radius: 14px; }
+  .taps { font-weight: 700; color: var(--blush-strong); }
+
+  /* scratch card */
+  .scratch {
+    position: relative; width: min(340px, 100%); height: 220px; margin: 18px 0 22px;
+    border-radius: 20px; overflow: hidden; box-shadow: 0 18px 40px rgba(0, 0, 0, .35);
+  }
+  .scratch-msg {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: var(--paper); color: var(--ink-accent); font: 700 28px/1.3 var(--script); text-align: center;
+  }
+  #scratchCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; transition: opacity .6s; }
+  #scratchCanvas.cleared { opacity: 0; pointer-events: none; }
+
   /* letter */
   .card {
     width: 100%; max-width: 540px; text-align: left;
@@ -156,6 +189,7 @@
     fromName: "Me",             // who it's from
     heartsToWin: 14,            // hearts to catch in the mini-game
     question: "Will you be my Valentine?",
+    secret: "You are my favourite person in the whole world 💖",  // hidden under the scratch card
     letter: [                   // the love letter — one line per paragraph
       "Happy Valentine's Day!",
       "Every day with you feels like a love story, and today I just want to remind you how much you mean to me.",
@@ -172,7 +206,7 @@
 <button id="musicBtn" hidden aria-label="Toggle music">🔊</button>
 
 <main>
-  <!-- 1. Intro -->
+  <!-- Intro -->
   <section class="scene active" id="intro">
     <div class="envelope" aria-hidden="true"><span class="seal">❤️</span></div>
     <h1>Hey <span data-to></span>,</h1>
@@ -180,7 +214,7 @@
         <button class="btn" id="openBtn" style="margin-top:14px">Open it 💌</button>
   </section>
 
-  <!-- 2. Mini-game -->
+  <!-- Mini-game -->
   <section class="scene" id="game">
     <div class="hud">
       <h2>Catch my heart</h2>
@@ -200,12 +234,32 @@
       <div class="overlay" id="gameWin" hidden>
         <div class="big">💘</div>
         <h2>You caught my heart!</h2>
-        <button class="btn" id="toAsk">Next →</button>
+        <button class="btn" id="toMatch">Next →</button>
       </div>
     </div>
   </section>
 
-  <!-- 3. The question -->
+  <!-- Memory match -->
+  <section class="scene" id="match">
+    <h2>Find the pairs</h2>
+    <p>Flip two cards at a time and match all <span id="pairTotal"></span> pairs</p>
+    <p class="taps">Pairs found: <span id="pairCount">0</span></p>
+    <div class="grid" id="grid"></div>
+    <button class="btn" id="matchNext" hidden>Next →</button>
+  </section>
+
+  <!-- Scratch card -->
+  <section class="scene" id="scratch">
+    <h2>A secret for you</h2>
+    <p>Rub the card with your finger to reveal it</p>
+    <div class="scratch">
+      <div class="scratch-msg" id="scratchMsg"></div>
+      <canvas id="scratchCanvas" aria-label="Scratch card: rub to reveal a message"></canvas>
+    </div>
+    <button class="btn" id="scratchNext" hidden>Next →</button>
+  </section>
+
+  <!-- The question -->
   <section class="scene" id="ask">
     <div class="ask-emoji" id="askEmoji">🥺</div>
     <h2 id="question"></h2>
@@ -215,7 +269,7 @@
     </div>
   </section>
 
-  <!-- 4. Love letter -->
+  <!-- Love letter -->
   <section class="scene" id="letter">
     <article class="card" id="letterCard">
       <h2>Dear <span data-to></span>,</h2>
@@ -247,7 +301,7 @@
 
   // ---------- scenes ----------
   let current = "intro";
-  const onEnter = { game: enterGame, letter: enterLetter };
+  const onEnter = { game: enterGame, match: enterMatch, scratch: enterScratch, letter: enterLetter };
   function show(id) {
     document.querySelectorAll(".scene").forEach((s) => s.classList.toggle("active", s.id === id));
     current = id;
@@ -332,14 +386,14 @@
     });
   }
 
-  // ---------- 1. intro ----------
+  // ---------- intro ----------
   $("#openBtn").addEventListener("click", () => {
     if (music) music.play().catch(() => {});
     burst(60, innerWidth / 2, innerHeight * 0.35);
     show("game");
   });
 
-  // ---------- 2. mini-game ----------
+  // ---------- mini-game ----------
   const canvas = $("#gameCanvas"), gctx = canvas.getContext("2d"), wrap = $("#gameWrap");
   const G = { w: 0, h: 0, basketX: 0, items: [], pops: [], score: 0, running: false, last: 0, spawnIn: 0 };
   const ITEMS = { good: { icon: "💖", pts: 1 }, bonus: { icon: "💝", pts: 2 }, bad: { icon: "💔", pts: -1 } };
@@ -371,7 +425,7 @@
     G.running = true; G.last = performance.now(); G.spawnIn = 300;
     requestAnimationFrame(loop);
   });
-  $("#toAsk").addEventListener("click", () => show("ask"));
+  $("#toMatch").addEventListener("click", () => show("match"));
 
   function spawn() {
     const r = Math.random();
@@ -432,7 +486,115 @@
     $("#gameWin").hidden = false;
   }
 
-  // ---------- 3. the question ----------
+  // ---------- memory match ----------
+  const MATCH_ICONS = ["💖", "🌹", "💌", "🍫", "🧸", "💍"];
+  const MATCH_BACK = "♥";
+  let matchBuilt = false;
+  function enterMatch() {
+    if (matchBuilt) return;
+    matchBuilt = true;
+    const deck = MATCH_ICONS.concat(MATCH_ICONS);
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = (Math.random() * (i + 1)) | 0;
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    const grid = $("#grid");
+    let open = [], found = 0, busy = false;
+    $("#pairTotal").textContent = MATCH_ICONS.length;
+    deck.forEach((icon) => {
+      const card = document.createElement("button");
+      card.className = "mcard";
+      card.setAttribute("aria-label", "Hidden card");
+      card.innerHTML = '<span class="inner"><span class="face back"></span><span class="face front"></span></span>';
+      card.querySelector(".back").textContent = MATCH_BACK;
+      card.querySelector(".front").textContent = icon;
+      card.addEventListener("click", () => {
+        if (busy || card.classList.contains("flipped")) return;
+        card.classList.add("flipped");
+        card.setAttribute("aria-label", icon);
+        buzz(10);
+        open.push({ card, icon });
+        if (open.length < 2) return;
+        const [a, b] = open;
+        open = [];
+        if (a.icon === b.icon) {
+          a.card.classList.add("matched"); b.card.classList.add("matched");
+          found++;
+          $("#pairCount").textContent = found;
+          const r = b.card.getBoundingClientRect();
+          burst(24, r.left + r.width / 2, r.top + r.height / 2);
+          if (found === MATCH_ICONS.length) setTimeout(() => { burst(160); buzz([30, 40, 30]); $("#matchNext").hidden = false; }, 400);
+        } else {
+          busy = true;
+          setTimeout(() => {
+            [a, b].forEach((o) => { o.card.classList.remove("flipped"); o.card.setAttribute("aria-label", "Hidden card"); });
+            busy = false;
+          }, 800);
+        }
+      });
+      grid.appendChild(card);
+    });
+  }
+  $("#matchNext").addEventListener("click", () => show("scratch"));
+
+  // ---------- scratch card ----------
+  let scratchReady = false;
+  function enterScratch() {
+    if (scratchReady) return;
+    scratchReady = true;
+    $("#scratchMsg").textContent = CONFIG.secret;
+    const cv = $("#scratchCanvas"), c = cv.getContext("2d");
+    const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+    cv.width = r.width * d; cv.height = r.height * d;
+    c.scale(d, d);
+    const g = c.createLinearGradient(0, 0, r.width, r.height);
+    g.addColorStop(0, "#ff8fb1"); g.addColorStop(0.5, "#ffc2d1"); g.addColorStop(1, "#ff4d8d");
+    c.fillStyle = g;
+    c.fillRect(0, 0, r.width, r.height);
+    c.fillStyle = "rgba(255, 255, 255, .92)";
+    c.font = "700 22px Quicksand, sans-serif";
+    c.textAlign = "center"; c.textBaseline = "middle";
+    c.fillText("✨ Scratch here ✨", r.width / 2, r.height / 2);
+    c.globalCompositeOperation = "destination-out";
+    c.lineWidth = 44; c.lineCap = "round"; c.lineJoin = "round";
+
+    let last = null, strokes = 0, done = false;
+    const pt = (e) => { const b = cv.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+    const scratchTo = (a, b) => {
+      c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+      if (++strokes % 25 === 0) check();
+    };
+    const check = () => {
+      if (done) return;
+      const data = c.getImageData(0, 0, cv.width, cv.height).data;
+      let clear = 0, total = 0;
+      for (let i = 3; i < data.length; i += 160) { total++; if (data[i] < 128) clear++; }
+      if (clear / total < 0.5) return;
+      done = true;
+      cv.classList.add("cleared");
+      buzz([30, 40, 30]);
+      const b = cv.getBoundingClientRect();
+      burst(150, b.left + b.width / 2, b.top + b.height / 2);
+      setTimeout(() => { $("#scratchNext").hidden = false; }, 500);
+    };
+    cv.addEventListener("pointerdown", (e) => {
+      last = pt(e);
+      scratchTo(last, last);
+      try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    cv.addEventListener("pointermove", (e) => {
+      if (!last) return;
+      const p = pt(e);
+      scratchTo(last, p);
+      last = p;
+    });
+    const end = () => { last = null; check(); };
+    cv.addEventListener("pointerup", end);
+    cv.addEventListener("pointercancel", end);
+  }
+  $("#scratchNext").addEventListener("click", () => show("ask"));
+
+  // ---------- the question ----------
   // "No" does nothing — except make "Yes" a little harder to resist 😄
   let noCount = 0;
   const noBtn = $("#noBtn");
@@ -449,7 +611,7 @@
     setTimeout(() => show("letter"), 1100);
   });
 
-  // ---------- 4. love letter ----------
+  // ---------- love letter ----------
   let letterStarted = false, letterDone = false, skipTyping = reduceMotion;
   const body = $("#letterBody");
   $("#letterCard").addEventListener("click", () => { skipTyping = true; });

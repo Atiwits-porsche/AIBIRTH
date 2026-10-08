@@ -5,22 +5,26 @@ HTML file with no app to install and nothing to build.
 
 | Project | Folder | Flow |
 |---|---|---|
-| 💘 **Valentine** | [`valentine/`](valentine/valentine.html) | Envelope → catch falling hearts → "Will you be my Valentine?" → love letter |
-| 🎂 **Birthday** | [`birthday/`](birthday/birthday.html) | Envelope → pop the balloons → blow out the candles → birthday card |
+| 💘 **Valentine** | [`valentine/`](valentine/valentine.html) | Envelope → catch hearts → memory match → scratch card → "Will you be my Valentine?" → love letter |
+| 🎂 **Birthday** | [`birthday/`](birthday/birthday.html) | Envelope → pop balloons → memory match → unwrap the gift → blow out the candles → birthday card |
 
 ## 💘 Valentine
 
 1. **Envelope**: "Hey *name*, someone made you a little surprise…"
 2. **Catch my heart**: they drag a basket to catch 💖 (💝 counts double, 💔 takes one away).
-3. **"Will you be my Valentine?"**: tapping **No** does nothing except make **Yes** bigger each time 😄
-4. **Love letter**: it types itself out, with optional photos and your signature.
+3. **Memory match**: they flip cards to find 6 pairs (💖 🌹 💌 🍫 🧸 💍).
+4. **Scratch card**: they rub the card with a finger to reveal your secret message (`secret` in CONFIG).
+5. **"Will you be my Valentine?"**: tapping **No** does nothing except make **Yes** bigger each time 😄
+6. **Love letter**: it types itself out, with optional photos and your signature.
 
 ## 🎂 Birthday
 
 1. **Envelope**: "Hey *name*, it's your special day…"
 2. **Pop the balloons**: they tap the rising 🎈 to pop them (🎁 counts double).
-3. **Cake**: they tap the flames, or tap 🎤 and really blow into the phone. Confetti and a *Happy Birthday* tune follow.
-4. **Birthday card**: your message types itself out.
+3. **Memory match**: they flip cards to find 6 party pairs (🎂 🎁 🎈 🥳 🍰 🎉).
+4. **Unwrap the gift**: they tap the present 8 times until it opens and shows your gift message (`giftMessage` in CONFIG).
+5. **Cake**: they tap the flames, or tap 🎤 and really blow into the phone. Confetti and a *Happy Birthday* tune follow.
+6. **Birthday card**: your message types itself out.
 
 ## Personalise
 
