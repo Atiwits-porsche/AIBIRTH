@@ -178,7 +178,14 @@
     box-shadow: none; animation: none; cursor: default;
   }
   @keyframes glow { to { box-shadow: 0 0 34px var(--rose), 0 0 0 3px rgba(255, 255, 255, .5); } }
-  #kissBtn { margin-top: 18px; }
+  #kissBtn {
+    position: fixed; z-index: 30; top: max(12px, env(safe-area-inset-top)); right: 12px;
+    height: 44px; padding: 0 16px; border-radius: 999px; border: 0; cursor: pointer;
+    background: linear-gradient(135deg, var(--rose), var(--coral)); color: #fff;
+    font: 700 15px var(--sans); box-shadow: 0 6px 16px rgba(0, 0, 0, .3); touch-action: manipulation;
+  }
+  body.music-on #kissBtn { right: 64px; }
+  body.in-game .scene.active { padding-top: calc(max(12px, env(safe-area-inset-top)) + 58px); }
   .kiss-pop {
     position: fixed; left: 50%; top: 45%; z-index: 25; pointer-events: none;
     font-size: 140px; line-height: 1; transform: translate(-50%, -50%);
@@ -275,6 +282,7 @@
 <canvas id="fx" aria-hidden="true"></canvas>
 <button id="musicBtn" hidden aria-label="Toggle music">🔊</button>
 <button id="backBtn" hidden aria-label="Back to the game map">←</button>
+<button id="kissBtn" hidden aria-label="Kiss me: skip this game">Kiss me 💋</button>
 
 <main>
   <!-- Intro -->
@@ -296,7 +304,6 @@
       <span class="tile-icon" id="finalIcon">🔒</span>
       <span class="tile-name" id="finalName">Finish all games to unlock</span>
     </button>
-    <button class="btn" id="kissBtn">Kiss me 💋</button>
   </section>
 
   <!-- Mini-game -->
@@ -428,7 +435,10 @@
   function show(id) {
     document.querySelectorAll(".scene").forEach((s) => s.classList.toggle("active", s.id === id));
     current = id;
-    $("#backBtn").hidden = !GAMES.some((g) => g.id === id);
+    const inGame = GAMES.some((g) => g.id === id);
+    $("#backBtn").hidden = !inGame;
+    $("#kissBtn").hidden = !inGame;
+    document.body.classList.toggle("in-game", inGame);
     window.scrollTo(0, 0);
     if (onEnter[id]) onEnter[id]();
   }
@@ -504,6 +514,7 @@
     music = new Audio(CONFIG.music);
     music.loop = true;
     $("#musicBtn").hidden = false;
+    document.body.classList.add("music-on");
     $("#musicBtn").addEventListener("click", () => {
       if (music.paused) { music.play().catch(() => {}); $("#musicBtn").textContent = "🔊"; }
       else { music.pause(); $("#musicBtn").textContent = "🔇"; }
@@ -549,8 +560,10 @@
   }
   function complete(id) { done.add(id); saveDone(); show("map"); }
   $("#finalTile").addEventListener("click", () => show(FINAL.id));
-  // "Kiss me" skips the games and goes straight to the final surprise
+  // "Kiss me" skips only the game being played: it counts as done and goes back to the map
   $("#kissBtn").addEventListener("click", () => {
+    const id = current;
+    if (!GAMES.some((g) => g.id === id)) return;
     const kiss = document.createElement("div");
     kiss.className = "kiss-pop";
     kiss.textContent = "💋";
@@ -558,7 +571,7 @@
     document.body.appendChild(kiss);
     burst(140, innerWidth / 2, innerHeight * 0.45);
     buzz([30, 50, 30]);
-    setTimeout(() => show(FINAL.id), 800);
+    setTimeout(() => { if (current === id) complete(id); }, 800);
   });
   $("#backBtn").addEventListener("click", () => show("map"));
 
