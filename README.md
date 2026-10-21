@@ -6,7 +6,7 @@ HTML file with no app to install and nothing to build.
 | Project | Folder | Games on the map | Final surprise |
 |---|---|---|---|
 | 💘 **Valentine** | [`valentine/`](valentine/valentine.html) | Catch my heart · Find the pairs · Secret scratch card · Cupid's Arrow · Photo puzzle | "Will you be my Valentine?" → love letter |
-| 🎂 **Birthday** | [`birthday/`](birthday/birthday.html) | Pop the balloons · Find the pairs · Unwrap the gift · Cake Stacker · Spin the Wheel | Blow out the candles → birthday card |
+| 🎂 **Birthday** | [`birthday/`](birthday/birthday.html) | Pop the balloons · Find the gift · Unwrap the gift · Cake Stacker · Spin the Wheel | Blow out the candles → birthday card |
 
 ## How it works
 
@@ -28,7 +28,7 @@ skips just that game (it counts as finished) and goes back to the map. Progress 
 ## 🎂 Birthday games
 
 - **Pop the balloons**: tap the rising 🎈 (🎁 counts double).
-- **Find the pairs**: flip cards to match 6 party pairs (🎂 🎁 🎈 🥳 🍰 🎉).
+- **Find the gift**: a 🎁 hides under one of 3 party hats, the hats shuffle, and they tap the right one. 3 rounds, each faster.
 - **Unwrap the gift**: tap the present 8 times to reveal `giftMessage`.
 - **Cake Stacker**: tap to drop sliding cake layers; whatever hangs over the edge falls off. Stack 8 to win.
 - **Spin the Wheel**: spin for a prize from `wheelPrizes`. Set `wheelWinner` to a number to always land on that prize (0 = first).
