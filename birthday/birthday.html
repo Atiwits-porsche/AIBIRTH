@@ -100,7 +100,7 @@
     position: relative; flex: 1; min-height: 0; width: 100%; max-width: 520px;
     border-radius: 24px; background: var(--glass); border: 1px solid var(--glass-line); overflow: hidden;
   }
-    #gameCanvas { display: block; width: 100%; height: 100%; touch-action: none; }
+    .game-wrap canvas { display: block; width: 100%; height: 100%; touch-action: none; }
   .overlay {
     position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 14px; padding: 20px; background: rgba(15, 18, 51, .62); backdrop-filter: blur(3px);
@@ -185,6 +185,60 @@
   }
   @keyframes popIn { from { transform: scale(.4); opacity: 0; } }
 
+  /* game map */
+  .map-progress { font-size: 26px; letter-spacing: 4px; margin: 6px 0 2px; color: var(--blush-strong); }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 420px; margin: 12px 0; }
+  .tile {
+    appearance: none; cursor: pointer; position: relative; touch-action: manipulation;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    min-height: 118px; padding: 16px 10px; border-radius: 20px;
+    background: var(--glass); border: 1px solid var(--glass-line); color: var(--blush-strong);
+    font: 700 15px var(--sans); transition: transform .2s ease;
+  }
+  .tile:active { transform: scale(.96); }
+  .tile:focus-visible { outline: 3px solid var(--blush-strong); outline-offset: 3px; }
+  .tile-icon { font-size: 40px; line-height: 1; }
+  .tile-badge {
+    position: absolute; top: 8px; right: 10px; width: 24px; height: 24px; border-radius: 50%;
+    display: none; align-items: center; justify-content: center;
+    background: var(--coral); color: #fff; font-size: 14px;
+  }
+  .tile.done { border-color: var(--coral); box-shadow: inset 0 0 0 1px var(--coral); }
+  .tile.done .tile-badge { display: flex; }
+  .tile.final {
+    width: 100%; max-width: 420px; min-height: 92px; flex-direction: row; gap: 14px; font-size: 18px;
+    background: linear-gradient(135deg, var(--rose), var(--coral)); border: 0; color: #fff;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .3); animation: glow 1.4s ease-in-out infinite alternate;
+  }
+  .tile.final.locked {
+    background: var(--glass); border: 1px dashed var(--glass-line); color: var(--blush);
+    box-shadow: none; animation: none; cursor: default;
+  }
+  @keyframes glow { to { box-shadow: 0 0 34px var(--rose), 0 0 0 3px rgba(255, 255, 255, .5); } }
+  #backBtn {
+    position: fixed; z-index: 30; top: max(12px, env(safe-area-inset-top)); left: 12px;
+    width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--glass-line);
+    background: var(--glass); color: #fff; font-size: 20px; cursor: pointer;
+  }
+  .overlay.top { justify-content: flex-start; padding-top: 28px; background: linear-gradient(rgba(0, 0, 0, .55), transparent 70%); backdrop-filter: none; }
+
+  #stack { height: 100vh; height: 100dvh; justify-content: flex-start; gap: 12px; }
+
+  /* spin the wheel */
+  .wheel-box { position: relative; width: min(320px, 86vw); aspect-ratio: 1; margin: 26px 0 10px; }
+  #wheelCanvas { display: block; width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 18px 40px rgba(0, 0, 0, .45), 0 0 0 6px var(--blush-strong); }
+  .wheel-pointer {
+    position: absolute; left: 50%; top: -22px; transform: translateX(-50%); z-index: 2;
+    font-size: 36px; line-height: 1; color: var(--blush-strong); text-shadow: 0 3px 6px rgba(0, 0, 0, .5);
+  }
+  .wheel-hub {
+    appearance: none; position: absolute; left: 50%; top: 50%; width: 78px; height: 78px; margin: -39px 0 0 -39px;
+    border-radius: 50%; border: 4px solid var(--blush-strong); cursor: pointer;
+    background: linear-gradient(135deg, var(--rose), var(--coral)); color: #fff; font: 700 17px var(--sans);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .4); touch-action: manipulation;
+  }
+  .wheel-hub:disabled { cursor: default; }
+
   /* letter */
   .card {
     width: 100%; max-width: 540px; text-align: left;
@@ -227,6 +281,8 @@
     age: 25,                    // their new age (up to 12 candles are drawn)
     balloonsToWin: 15,          // balloons to pop in the mini-game
     giftMessage: "🎟️ Coupon: one wish of your choice — I'll make it come true!",  // inside the present
+    wheelPrizes: ["🍰 Cake date", "🎬 Movie night", "💆 Massage", "🍕 Pizza party", "🌹 Flowers", "🎁 Mystery gift"],
+    wheelWinner: -1,            // -1 = random prize, or a number to always land on it (0 = first prize)
     letter: [                   // the birthday card — one line per paragraph
       "Happy Birthday! 🎉",
       "Another year of you is the best gift the world could get.",
@@ -241,6 +297,7 @@
 <div id="bg" aria-hidden="true"></div>
 <canvas id="fx" aria-hidden="true"></canvas>
 <button id="musicBtn" hidden aria-label="Toggle music">🔊</button>
+<button id="backBtn" hidden aria-label="Back to the game map">←</button>
 
 <main>
   <!-- Intro -->
@@ -250,6 +307,19 @@
     <p>It's your special day — someone made you a surprise…</p>
     <p style="opacity:.75;font-size:15px">Turn your sound on 🔊</p>
     <button class="btn" id="openBtn" style="margin-top:14px">Open it 🎁</button>
+  </section>
+
+  <!-- Game map -->
+  <section class="scene" id="map">
+    <h2>Birthday games 🎉</h2>
+    <p>Play the games in any order.<br>Finish them all to unlock the final surprise!</p>
+    <div class="map-progress" id="mapProgress" aria-hidden="true"></div>
+    <p class="taps" id="mapCount"></p>
+    <div class="tiles" id="tiles"></div>
+    <button class="tile final locked" id="finalTile" disabled>
+      <span class="tile-icon" id="finalIcon">🔒</span>
+      <span class="tile-name" id="finalName">Finish all games to unlock</span>
+    </button>
   </section>
 
   <!-- Mini-game -->
@@ -272,7 +342,7 @@
       <div class="overlay" id="gameWin" hidden>
         <div class="big">🥳</div>
         <h2>Party time!</h2>
-        <button class="btn" id="toMatch">Next →</button>
+        <button class="btn" id="gameDone">Back to map ✓</button>
       </div>
     </div>
   </section>
@@ -283,7 +353,7 @@
     <p>Flip two cards at a time and match all <span id="pairTotal"></span> pairs</p>
     <p class="taps">Pairs found: <span id="pairCount">0</span></p>
     <div class="grid" id="grid"></div>
-    <button class="btn" id="matchNext" hidden>Next →</button>
+    <button class="btn" id="matchNext" hidden>Back to map ✓</button>
   </section>
 
   <!-- Gift unwrap -->
@@ -293,7 +363,49 @@
     <button class="gift-btn" id="giftBtn" aria-label="Unwrap the present">🎁</button>
     <p class="taps" id="giftTaps"></p>
     <div class="gift-reveal" id="giftReveal" hidden></div>
-    <button class="btn" id="giftNext" hidden>To the cake →</button>
+    <button class="btn" id="giftNext" hidden>Back to map ✓</button>
+  </section>
+
+  <!-- Cake stacker -->
+  <section class="scene" id="stack">
+    <div class="hud">
+      <h2>Cake Stacker</h2>
+      <p>Tap to drop each layer on top of the one below</p>
+      <div class="progress">
+        <div class="bar"><i id="stackBar"></i></div>
+        <span><span id="stackCount">0</span>/<span id="stackGoal"></span></span>
+      </div>
+    </div>
+    <div class="game-wrap" id="stackWrap">
+      <canvas id="stackCanvas" aria-label="Cake stacking game"></canvas>
+      <div class="overlay" id="stackStart">
+        <div class="big">🍰</div>
+        <p>A cake layer slides back and forth.<br>Tap to drop it. Whatever hangs over the edge falls off!</p>
+        <button class="btn" id="stackStartBtn">Start</button>
+      </div>
+      <div class="overlay" id="stackFail" hidden>
+        <div class="big">🙈</div>
+        <h2>Oops, it fell!</h2>
+        <button class="btn" id="stackRetry">Try again</button>
+      </div>
+      <div class="overlay top" id="stackWin" hidden>
+        <h2>What a cake! 🎉</h2>
+        <button class="btn" id="stackDone">Back to map ✓</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Spin the wheel -->
+  <section class="scene" id="wheel">
+    <h2>Spin the Wheel</h2>
+    <p id="wheelHint">Spin it to win your birthday prize!</p>
+    <div class="wheel-box">
+      <div class="wheel-pointer" aria-hidden="true">▼</div>
+      <canvas id="wheelCanvas" aria-label="Prize wheel"></canvas>
+      <button class="wheel-hub" id="spinBtn">SPIN</button>
+    </div>
+    <div class="gift-reveal" id="wheelPrize" hidden></div>
+    <button class="btn" id="wheelDone" hidden>Back to map ✓</button>
   </section>
 
   <!-- Birthday cake -->
@@ -343,10 +455,12 @@
 
   // ---------- scenes ----------
   let current = "intro";
-  const onEnter = { game: enterGame, match: enterMatch, cake: enterCake, letter: enterLetter };
+  const onEnter = { map: enterMap, game: enterGame, match: enterMatch, stack: enterStack,
+                    wheel: enterWheel, cake: enterCake, letter: enterLetter };
   function show(id) {
     document.querySelectorAll(".scene").forEach((s) => s.classList.toggle("active", s.id === id));
     current = id;
+    $("#backBtn").hidden = !GAMES.some((g) => g.id === id);
     window.scrollTo(0, 0);
     if (onEnter[id]) onEnter[id]();
   }
@@ -421,11 +535,61 @@
     });
   }
 
+  // ---------- game map ----------
+  const GAMES = [
+    { id: "game", icon: "🎈", name: "Pop the balloons" },
+    { id: "match", icon: "🃏", name: "Find the pairs" },
+    { id: "gift", icon: "🎁", name: "Unwrap the gift" },
+    { id: "stack", icon: "🍰", name: "Cake Stacker" },
+    { id: "wheel", icon: "🎡", name: "Spin the Wheel" },
+  ];
+  const FINAL = { id: "cake", icon: "🎂", name: "Blow out your candles" };
+  const STORE_KEY = "aibirth-birthday-done";
+  let done = new Set();
+  try { done = new Set(JSON.parse(localStorage.getItem(STORE_KEY) || "[]")); } catch (e) {}
+  const saveDone = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify([...done])); } catch (e) {} };
+  const allDone = () => GAMES.every((g) => done.has(g.id));
+  function enterMap() {
+    const tiles = $("#tiles");
+    tiles.textContent = "";
+    GAMES.forEach((g) => {
+      const t = document.createElement("button");
+      t.className = "tile" + (done.has(g.id) ? " done" : "");
+      t.innerHTML = '<span class="tile-icon"></span><span class="tile-name"></span><span class="tile-badge">✓</span>';
+      t.querySelector(".tile-icon").textContent = g.icon;
+      t.querySelector(".tile-name").textContent = g.name;
+      t.setAttribute("aria-label", g.name + (done.has(g.id) ? " (finished)" : ""));
+      t.addEventListener("click", () => show(g.id));
+      tiles.appendChild(t);
+    });
+    const count = GAMES.filter((g) => done.has(g.id)).length;
+    $("#mapProgress").textContent = GAMES.map((g) => (done.has(g.id) ? "⭐" : "☆")).join(" ");
+    $("#mapCount").textContent = count + " / " + GAMES.length + " finished";
+    const f = $("#finalTile"), open = allDone();
+    f.classList.toggle("locked", !open);
+    f.disabled = !open;
+    $("#finalIcon").textContent = open ? FINAL.icon : "🔒";
+    $("#finalName").textContent = open ? FINAL.name : "Finish all games to unlock";
+    if (open) setTimeout(() => burst(120, innerWidth / 2, innerHeight * 0.75), 300);
+  }
+  function complete(id) { done.add(id); saveDone(); show("map"); }
+  $("#finalTile").addEventListener("click", () => show(FINAL.id));
+  $("#backBtn").addEventListener("click", () => show("map"));
+
+  // shared helper for the canvas games
+  function fitCanvas(cv, ctx, box, st) {
+    const r = box.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+    if (!r.width) return;
+    cv.width = r.width * d; cv.height = r.height * d;
+    ctx.setTransform(d, 0, 0, d, 0, 0);
+    st.w = r.width; st.h = r.height;
+  }
+
   // ---------- intro ----------
   $("#openBtn").addEventListener("click", () => {
     if (music) music.play().catch(() => {});
     burst(60, innerWidth / 2, innerHeight * 0.35);
-    show("game");
+    show("map");
   });
 
   // ---------- mini-game: pop the balloons ----------
@@ -458,7 +622,7 @@
     G.running = true; G.last = performance.now(); G.spawnIn = 200;
     requestAnimationFrame(loop);
   });
-  $("#toMatch").addEventListener("click", () => show("match"));
+  $("#gameDone").addEventListener("click", () => complete("game"));
 
   function spawn() {
     const gift = Math.random() < 0.12;
@@ -578,7 +742,7 @@
       grid.appendChild(card);
     });
   }
-  $("#matchNext").addEventListener("click", () => show("gift"));
+  $("#matchNext").addEventListener("click", () => complete("match"));
 
   // ---------- gift unwrap ----------
   const GIFT_TAPS = 8;
@@ -604,7 +768,190 @@
     burst(200, r.left + r.width / 2, r.top + r.height / 2);
     setTimeout(() => { $("#giftNext").hidden = false; }, 700);
   });
-  $("#giftNext").addEventListener("click", () => show("cake"));
+  $("#giftNext").addEventListener("click", () => complete("gift"));
+
+  // ---------- cake stacker ----------
+  const STACK_GOAL = 8, LAYER_H = 30;
+  const LAYER_COLORS = ["#ffb3c6", "#ffd166", "#b388ff", "#7ae582", "#4cc9f0", "#ff8c42", "#ff5c8a", "#f3e6ff"];
+  const sc = $("#stackCanvas"), sctx = sc.getContext("2d"), swrap = $("#stackWrap");
+  const S = { w: 0, h: 0, layers: [], cur: null, falling: [], pops: [], running: false, won: false, loop: false, last: 0, cam: 0 };
+  $("#stackGoal").textContent = STACK_GOAL;
+  function enterStack() {
+    fitCanvas(sc, sctx, swrap, S);
+    if (!S.layers.length) resetStack();
+    drawStack();
+  }
+  function resetStack() {
+    const bw = Math.min(S.w * 0.62, 230);
+    S.layers = [{ x: (S.w - bw) / 2, w: bw, color: "#ff8fab" }];
+    S.falling = []; S.pops = []; S.cam = 0; S.won = false;
+    nextLayer();
+    updateStackHud();
+  }
+  function nextLayer() {
+    const n = S.layers.length, top = S.layers[n - 1], fromLeft = n % 2 === 1;
+    S.cur = { x: fromLeft ? 0 : S.w - top.w, w: top.w, dir: fromLeft ? 1 : -1,
+              speed: 2.4 + n * 0.35, color: LAYER_COLORS[(n - 1) % LAYER_COLORS.length] };
+  }
+  function updateStackHud() {
+    const n = S.layers.length - 1;
+    $("#stackCount").textContent = Math.min(n, STACK_GOAL);
+    $("#stackBar").style.width = Math.min(100, (n / STACK_GOAL) * 100) + "%";
+  }
+  function ensureStackLoop() {
+    if (S.loop) return;
+    S.loop = true; S.last = performance.now();
+    requestAnimationFrame(stackLoop);
+  }
+  $("#stackStartBtn").addEventListener("click", () => { $("#stackStart").hidden = true; S.running = true; ensureStackLoop(); });
+  $("#stackRetry").addEventListener("click", () => { $("#stackFail").hidden = true; resetStack(); S.running = true; ensureStackLoop(); });
+  $("#stackDone").addEventListener("click", () => complete("stack"));
+  sc.addEventListener("pointerdown", () => { if (S.running && S.cur) dropLayer(); });
+
+  function dropLayer() {
+    const level = S.layers.length, top = S.layers[level - 1], c = S.cur;
+    let l = Math.max(c.x, top.x), r = Math.min(c.x + c.w, top.x + top.w);
+    const fall = (x, w) => S.falling.push({ x, w, level, color: c.color, dy: 0, vy: 0, vx: (x < top.x ? -1.5 : 1.5), rot: 0 });
+    if (r - l < 4) { // missed the cake completely
+      fall(c.x, c.w);
+      S.cur = null; S.running = false;
+      buzz(120);
+      setTimeout(() => { $("#stackFail").hidden = false; }, 600);
+      return ensureStackLoop();
+    }
+    if (Math.abs(c.x - top.x) < 5) { // perfect drop: snap into place
+      l = top.x; r = top.x + top.w;
+      S.pops.push({ x: S.w / 2, level, life: 45, text: "Perfect!" });
+      buzz([15, 30, 15]);
+    } else {
+      if (c.x < top.x) fall(c.x, top.x - c.x);
+      else fall(top.x + top.w, c.x + c.w - (top.x + top.w));
+      buzz(15);
+    }
+    S.layers.push({ x: l, w: r - l, color: c.color });
+    updateStackHud();
+    if (S.layers.length - 1 >= STACK_GOAL) {
+      S.cur = null; S.running = false; S.won = true;
+      const b = swrap.getBoundingClientRect();
+      setTimeout(() => { burst(180, b.left + b.width / 2, b.top + b.height / 2); buzz([40, 60, 40]); $("#stackWin").hidden = false; }, 350);
+    } else nextLayer();
+    ensureStackLoop();
+  }
+  function stackLoop(t) {
+    const dt = Math.min(50, t - S.last) / 16.67;
+    S.last = t;
+    if (S.running && S.cur) {
+      const c = S.cur;
+      c.x += c.dir * c.speed * dt;
+      if (c.x < 0) { c.x = 0; c.dir = 1; }
+      if (c.x + c.w > S.w) { c.x = S.w - c.w; c.dir = -1; }
+    }
+    for (const f of S.falling) { f.vy += 0.45 * dt; f.dy += f.vy * dt; f.x += f.vx * dt; f.rot += f.vx * 0.02 * dt; }
+    S.falling = S.falling.filter((f) => f.dy < S.h + 300);
+    S.pops = S.pops.filter((p) => (p.life -= dt) > 0);
+    const target = Math.max(0, (S.layers.length + 2) * LAYER_H - S.h * 0.6);
+    S.cam += (target - S.cam) * Math.min(1, 0.12 * dt);
+    drawStack();
+    if (!S.running && !S.falling.length && !S.pops.length && Math.abs(target - S.cam) < 0.5) { S.loop = false; return; }
+    requestAnimationFrame(stackLoop);
+  }
+  function drawLayer(x, y, w, color) {
+    sctx.fillStyle = color;
+    sctx.beginPath();
+    if (sctx.roundRect) sctx.roundRect(x, y, w, LAYER_H - 2, 6); else sctx.rect(x, y, w, LAYER_H - 2);
+    sctx.fill();
+    sctx.fillStyle = "rgba(255, 255, 255, .9)";
+    sctx.fillRect(x + 2, y, Math.max(0, w - 4), 7);
+    for (let dx = x + 8; dx < x + w - 5; dx += 14) { sctx.beginPath(); sctx.arc(dx, y + 7, 3.5, 0, Math.PI); sctx.fill(); }
+  }
+  function drawStack() {
+    const { w, h } = S, ground = h - 34;
+    const yOf = (level) => ground - (level + 1) * LAYER_H + S.cam;
+    sctx.clearRect(0, 0, w, h);
+    sctx.fillStyle = "#f3e6ff";
+    sctx.beginPath(); sctx.ellipse(w / 2, ground + 8 + S.cam, Math.min(w * 0.44, 170), 11, 0, 0, 6.28); sctx.fill();
+    S.layers.forEach((L, i) => drawLayer(L.x, yOf(i), L.w, L.color));
+    if (S.cur) drawLayer(S.cur.x, yOf(S.layers.length) - 8, S.cur.w, S.cur.color);
+    for (const f of S.falling) {
+      sctx.save();
+      sctx.translate(f.x + f.w / 2, yOf(f.level) + f.dy + LAYER_H / 2);
+      sctx.rotate(f.rot);
+      drawLayer(-f.w / 2, -LAYER_H / 2, f.w, f.color);
+      sctx.restore();
+    }
+    sctx.textAlign = "center"; sctx.textBaseline = "middle";
+    if (S.won) {
+      const top = S.layers[S.layers.length - 1];
+      sctx.font = "34px serif";
+      sctx.fillText("🕯️", top.x + top.w / 2, yOf(S.layers.length - 1) - 18);
+    }
+    sctx.font = "700 22px Quicksand, sans-serif"; sctx.fillStyle = "#fff4d6";
+    for (const p of S.pops) {
+      sctx.globalAlpha = Math.min(1, p.life / 20);
+      sctx.fillText(p.text, p.x, yOf(p.level) - 22 - (45 - p.life) * 0.6);
+    }
+    sctx.globalAlpha = 1;
+  }
+
+  // ---------- spin the wheel ----------
+  const wc = $("#wheelCanvas"), wctx = wc.getContext("2d");
+  const PRIZES = CONFIG.wheelPrizes;
+  const WHEEL_COLORS = ["#ff5c8a", "#ffd166", "#4cc9f0", "#b388ff", "#7ae582", "#ff8c42", "#f78fb3", "#63cdda"];
+  const TAU = Math.PI * 2;
+  let wheelRot = 0, spun = false, wheelSize = 320;
+  function enterWheel() {
+    const d = window.devicePixelRatio || 1;
+    wheelSize = wc.getBoundingClientRect().width || 320;
+    wc.width = wheelSize * d; wc.height = wheelSize * d;
+    wctx.setTransform(d, 0, 0, d, 0, 0);
+    drawWheel();
+  }
+  function drawWheel() {
+    const r = wheelSize / 2, seg = TAU / PRIZES.length;
+    wctx.clearRect(0, 0, wheelSize, wheelSize);
+    wctx.save();
+    wctx.translate(r, r); wctx.rotate(wheelRot);
+    PRIZES.forEach((label, i) => {
+      const a0 = -Math.PI / 2 + i * seg;
+      wctx.fillStyle = WHEEL_COLORS[i % WHEEL_COLORS.length];
+      wctx.beginPath(); wctx.moveTo(0, 0); wctx.arc(0, 0, r, a0, a0 + seg); wctx.closePath(); wctx.fill();
+      wctx.strokeStyle = "rgba(255, 255, 255, .75)"; wctx.lineWidth = 2; wctx.stroke();
+      wctx.save();
+      wctx.rotate(a0 + seg / 2);
+      wctx.fillStyle = "#1f2250";
+      wctx.font = "700 " + Math.max(11, Math.round(wheelSize / 24)) + "px Quicksand, sans-serif";
+      wctx.textAlign = "right"; wctx.textBaseline = "middle";
+      wctx.fillText(label, r - 12, 0, r - 54);
+      wctx.restore();
+    });
+    wctx.restore();
+  }
+  $("#spinBtn").addEventListener("click", () => {
+    if (spun || !PRIZES.length) return;
+    spun = true;
+    $("#spinBtn").disabled = true;
+    $("#wheelHint").textContent = "Spinning…";
+    const n = PRIZES.length, seg = TAU / n;
+    const win = CONFIG.wheelWinner >= 0 && CONFIG.wheelWinner < n ? CONFIG.wheelWinner : (Math.random() * n) | 0;
+    // the wheel angle that puts prize `win` under the pointer (slightly off-centre so it looks natural)
+    const desired = TAU - (win + 0.5 + rand(-0.3, 0.3)) * seg;
+    const start = wheelRot, delta = TAU * 6 + (((desired - (start % TAU)) % TAU) + TAU) % TAU;
+    const dur = 4800, t0 = performance.now();
+    const step = (t) => {
+      const k = Math.min(1, (t - t0) / dur);
+      wheelRot = start + delta * (1 - Math.pow(1 - k, 4));
+      drawWheel();
+      if (k < 1) return requestAnimationFrame(step);
+      $("#wheelHint").textContent = "You won…";
+      $("#wheelPrize").textContent = PRIZES[win];
+      $("#wheelPrize").hidden = false;
+      burst(200, innerWidth / 2, innerHeight * 0.45);
+      buzz([40, 60, 40]);
+      setTimeout(() => { $("#wheelDone").hidden = false; }, 700);
+    };
+    requestAnimationFrame(step);
+  });
+  $("#wheelDone").addEventListener("click", () => complete("wheel"));
 
   // ---------- cake ----------
   let cakeReady = false, cakeFinished = false;
@@ -752,13 +1099,18 @@
     $("#letterActions").hidden = false;
   }
   $("#moreConfetti").addEventListener("click", (e) => { burst(120, e.clientX, e.clientY); rain(40); buzz(25); });
-  $("#replayBtn").addEventListener("click", () => location.reload());
+  $("#replayBtn").addEventListener("click", () => {
+    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+    location.reload();
+  });
 
   // ---------- resize ----------
   sizeFx();
   addEventListener("resize", () => {
     sizeFx();
     if (current === "game") { sizeGame(); drawGame(); }
+    if (current === "stack") { fitCanvas(sc, sctx, swrap, S); drawStack(); }
+
   });
 })();
 </script>

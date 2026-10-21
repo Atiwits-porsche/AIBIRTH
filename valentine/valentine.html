@@ -102,7 +102,7 @@
   }
   .game-wrap.shake { animation: shake .3s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
-  #gameCanvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  .game-wrap canvas { display: block; width: 100%; height: 100%; touch-action: none; }
   .overlay {
     position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 14px; padding: 20px; background: rgba(42, 10, 31, .6); backdrop-filter: blur(3px);
@@ -147,6 +147,64 @@
   }
   #scratchCanvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; transition: opacity .6s; }
   #scratchCanvas.cleared { opacity: 0; pointer-events: none; }
+
+  /* game map */
+  .map-progress { font-size: 26px; letter-spacing: 4px; margin: 6px 0 2px; color: var(--blush-strong); }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 420px; margin: 12px 0; }
+  .tile {
+    appearance: none; cursor: pointer; position: relative; touch-action: manipulation;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    min-height: 118px; padding: 16px 10px; border-radius: 20px;
+    background: var(--glass); border: 1px solid var(--glass-line); color: var(--blush-strong);
+    font: 700 15px var(--sans); transition: transform .2s ease;
+  }
+  .tile:active { transform: scale(.96); }
+  .tile:focus-visible { outline: 3px solid var(--blush-strong); outline-offset: 3px; }
+  .tile-icon { font-size: 40px; line-height: 1; }
+  .tile-badge {
+    position: absolute; top: 8px; right: 10px; width: 24px; height: 24px; border-radius: 50%;
+    display: none; align-items: center; justify-content: center;
+    background: var(--coral); color: #fff; font-size: 14px;
+  }
+  .tile.done { border-color: var(--coral); box-shadow: inset 0 0 0 1px var(--coral); }
+  .tile.done .tile-badge { display: flex; }
+  .tile.final {
+    width: 100%; max-width: 420px; min-height: 92px; flex-direction: row; gap: 14px; font-size: 18px;
+    background: linear-gradient(135deg, var(--rose), var(--coral)); border: 0; color: #fff;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .3); animation: glow 1.4s ease-in-out infinite alternate;
+  }
+  .tile.final.locked {
+    background: var(--glass); border: 1px dashed var(--glass-line); color: var(--blush);
+    box-shadow: none; animation: none; cursor: default;
+  }
+  @keyframes glow { to { box-shadow: 0 0 34px var(--rose), 0 0 0 3px rgba(255, 255, 255, .5); } }
+  #backBtn {
+    position: fixed; z-index: 30; top: max(12px, env(safe-area-inset-top)); left: 12px;
+    width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--glass-line);
+    background: var(--glass); color: #fff; font-size: 20px; cursor: pointer;
+  }
+  .overlay.top { justify-content: flex-start; padding-top: 28px; background: linear-gradient(rgba(0, 0, 0, .55), transparent 70%); backdrop-filter: none; }
+
+  #cupid { height: 100vh; height: 100dvh; justify-content: flex-start; gap: 12px; }
+
+  /* photo puzzle */
+  .puzzle-top { display: flex; align-items: center; gap: 14px; margin: 6px 0 12px; }
+  .puzzle-top p { margin: 0; }
+  .peek { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; border: 2px solid var(--glass-line); }
+  .board {
+    position: relative; width: min(330px, 100%); aspect-ratio: 1; margin-bottom: 20px;
+    border-radius: 16px; background: var(--glass); border: 1px solid var(--glass-line); overflow: hidden;
+  }
+  .piece {
+    appearance: none; border: 0; padding: 0; cursor: pointer; position: absolute;
+    width: 33.333%; height: 33.333%; background-size: 300% 300%; border-radius: 6px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .45); transition: left .18s ease, top .18s ease;
+    touch-action: manipulation;
+  }
+  .piece span { position: absolute; left: 6px; top: 4px; font: 700 12px var(--sans); color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); }
+  .board.solved .piece { box-shadow: none; border-radius: 0; }
+  .board.solved .piece span { display: none; }
+  .piece.last { animation: fadeIn .5s ease both; }
 
   /* letter */
   .card {
@@ -197,6 +255,7 @@
       "I can't wait for all the adventures still ahead of us.",
     ],
     photos: [],                 // e.g. ["photos/us1.jpg", "photos/us2.jpg"] — leave [] to hide
+    puzzlePhoto: "",            // e.g. "photos/us.jpg" for the photo puzzle — leave "" for a heart picture
     music: "",                  // e.g. "music/our-song.mp3" — leave "" for no music
   };
 </script>
@@ -204,6 +263,7 @@
 <div id="bg" aria-hidden="true"></div>
 <canvas id="fx" aria-hidden="true"></canvas>
 <button id="musicBtn" hidden aria-label="Toggle music">🔊</button>
+<button id="backBtn" hidden aria-label="Back to the game map">←</button>
 
 <main>
   <!-- Intro -->
@@ -212,6 +272,19 @@
     <h1>Hey <span data-to></span>,</h1>
     <p>Someone made you a little surprise…</p>
         <button class="btn" id="openBtn" style="margin-top:14px">Open it 💌</button>
+  </section>
+
+  <!-- Game map -->
+  <section class="scene" id="map">
+    <h2>Love games 💘</h2>
+    <p>Play the games in any order.<br>Finish them all to unlock the final surprise!</p>
+    <div class="map-progress" id="mapProgress" aria-hidden="true"></div>
+    <p class="taps" id="mapCount"></p>
+    <div class="tiles" id="tiles"></div>
+    <button class="tile final locked" id="finalTile" disabled>
+      <span class="tile-icon" id="finalIcon">🔒</span>
+      <span class="tile-name" id="finalName">Finish all games to unlock</span>
+    </button>
   </section>
 
   <!-- Mini-game -->
@@ -234,7 +307,7 @@
       <div class="overlay" id="gameWin" hidden>
         <div class="big">💘</div>
         <h2>You caught my heart!</h2>
-        <button class="btn" id="toMatch">Next →</button>
+        <button class="btn" id="gameDone">Back to map ✓</button>
       </div>
     </div>
   </section>
@@ -245,7 +318,7 @@
     <p>Flip two cards at a time and match all <span id="pairTotal"></span> pairs</p>
     <p class="taps">Pairs found: <span id="pairCount">0</span></p>
     <div class="grid" id="grid"></div>
-    <button class="btn" id="matchNext" hidden>Next →</button>
+    <button class="btn" id="matchNext" hidden>Back to map ✓</button>
   </section>
 
   <!-- Scratch card -->
@@ -256,7 +329,44 @@
       <div class="scratch-msg" id="scratchMsg"></div>
       <canvas id="scratchCanvas" aria-label="Scratch card: rub to reveal a message"></canvas>
     </div>
-    <button class="btn" id="scratchNext" hidden>Next →</button>
+    <button class="btn" id="scratchNext" hidden>Back to map ✓</button>
+  </section>
+
+  <!-- Cupid's Arrow -->
+  <section class="scene" id="cupid">
+    <div class="hud">
+      <h2>Cupid's Arrow</h2>
+      <p>Tap to shoot when a heart flies over the bow 🏹</p>
+      <div class="progress">
+        <div class="bar"><i id="cupidBar"></i></div>
+        <span><span id="cupidCount">0</span>/<span id="cupidGoal"></span></span>
+      </div>
+    </div>
+    <div class="game-wrap" id="cupidWrap">
+      <canvas id="cupidCanvas" aria-label="Cupid's Arrow game"></canvas>
+      <div class="overlay" id="cupidStart">
+        <div class="big">🏹</div>
+        <p>Hearts fly across the sky.<br>Tap anywhere to shoot an arrow straight up!</p>
+        <button class="btn" id="cupidStartBtn">Start</button>
+      </div>
+      <div class="overlay" id="cupidWin" hidden>
+        <div class="big">💘</div>
+        <h2>Bullseye, Cupid!</h2>
+        <button class="btn" id="cupidDone">Back to map ✓</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Photo puzzle -->
+  <section class="scene" id="puzzle">
+    <h2>Photo puzzle</h2>
+    <p>Tap a piece next to the empty space to slide it</p>
+    <div class="puzzle-top">
+      <img class="peek" id="peek" alt="The finished picture">
+      <p class="taps">Moves: <span id="moves">0</span></p>
+    </div>
+    <div class="board" id="board"></div>
+    <button class="btn" id="puzzleDone" hidden>Back to map ✓</button>
   </section>
 
   <!-- The question -->
@@ -301,10 +411,12 @@
 
   // ---------- scenes ----------
   let current = "intro";
-  const onEnter = { game: enterGame, match: enterMatch, scratch: enterScratch, letter: enterLetter };
+  const onEnter = { map: enterMap, game: enterGame, match: enterMatch, scratch: enterScratch,
+                    cupid: enterCupid, puzzle: enterPuzzle, letter: enterLetter };
   function show(id) {
     document.querySelectorAll(".scene").forEach((s) => s.classList.toggle("active", s.id === id));
     current = id;
+    $("#backBtn").hidden = !GAMES.some((g) => g.id === id);
     window.scrollTo(0, 0);
     if (onEnter[id]) onEnter[id]();
   }
@@ -386,11 +498,61 @@
     });
   }
 
+  // ---------- game map ----------
+  const GAMES = [
+    { id: "game", icon: "💖", name: "Catch my heart" },
+    { id: "match", icon: "🃏", name: "Find the pairs" },
+    { id: "scratch", icon: "✨", name: "Secret scratch card" },
+    { id: "cupid", icon: "🏹", name: "Cupid's Arrow" },
+    { id: "puzzle", icon: "🧩", name: "Photo puzzle" },
+  ];
+  const FINAL = { id: "ask", icon: "💌", name: "Open the big question" };
+  const STORE_KEY = "aibirth-valentine-done";
+  let done = new Set();
+  try { done = new Set(JSON.parse(localStorage.getItem(STORE_KEY) || "[]")); } catch (e) {}
+  const saveDone = () => { try { localStorage.setItem(STORE_KEY, JSON.stringify([...done])); } catch (e) {} };
+  const allDone = () => GAMES.every((g) => done.has(g.id));
+  function enterMap() {
+    const tiles = $("#tiles");
+    tiles.textContent = "";
+    GAMES.forEach((g) => {
+      const t = document.createElement("button");
+      t.className = "tile" + (done.has(g.id) ? " done" : "");
+      t.innerHTML = '<span class="tile-icon"></span><span class="tile-name"></span><span class="tile-badge">✓</span>';
+      t.querySelector(".tile-icon").textContent = g.icon;
+      t.querySelector(".tile-name").textContent = g.name;
+      t.setAttribute("aria-label", g.name + (done.has(g.id) ? " (finished)" : ""));
+      t.addEventListener("click", () => show(g.id));
+      tiles.appendChild(t);
+    });
+    const count = GAMES.filter((g) => done.has(g.id)).length;
+    $("#mapProgress").textContent = GAMES.map((g) => (done.has(g.id) ? "❤️" : "🤍")).join(" ");
+    $("#mapCount").textContent = count + " / " + GAMES.length + " finished";
+    const f = $("#finalTile"), open = allDone();
+    f.classList.toggle("locked", !open);
+    f.disabled = !open;
+    $("#finalIcon").textContent = open ? FINAL.icon : "🔒";
+    $("#finalName").textContent = open ? FINAL.name : "Finish all games to unlock";
+    if (open) setTimeout(() => burst(120, innerWidth / 2, innerHeight * 0.75), 300);
+  }
+  function complete(id) { done.add(id); saveDone(); show("map"); }
+  $("#finalTile").addEventListener("click", () => show(FINAL.id));
+  $("#backBtn").addEventListener("click", () => show("map"));
+
+  // shared helper for the canvas games
+  function fitCanvas(cv, ctx, box, st) {
+    const r = box.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+    if (!r.width) return;
+    cv.width = r.width * d; cv.height = r.height * d;
+    ctx.setTransform(d, 0, 0, d, 0, 0);
+    st.w = r.width; st.h = r.height;
+  }
+
   // ---------- intro ----------
   $("#openBtn").addEventListener("click", () => {
     if (music) music.play().catch(() => {});
     burst(60, innerWidth / 2, innerHeight * 0.35);
-    show("game");
+    show("map");
   });
 
   // ---------- mini-game ----------
@@ -425,7 +587,7 @@
     G.running = true; G.last = performance.now(); G.spawnIn = 300;
     requestAnimationFrame(loop);
   });
-  $("#toMatch").addEventListener("click", () => show("match"));
+  $("#gameDone").addEventListener("click", () => complete("game"));
 
   function spawn() {
     const r = Math.random();
@@ -535,7 +697,7 @@
       grid.appendChild(card);
     });
   }
-  $("#matchNext").addEventListener("click", () => show("scratch"));
+  $("#matchNext").addEventListener("click", () => complete("match"));
 
   // ---------- scratch card ----------
   let scratchReady = false;
@@ -592,7 +754,199 @@
     cv.addEventListener("pointerup", end);
     cv.addEventListener("pointercancel", end);
   }
-  $("#scratchNext").addEventListener("click", () => show("ask"));
+  $("#scratchNext").addEventListener("click", () => complete("scratch"));
+
+  // ---------- Cupid's Arrow ----------
+  const CUPID_GOAL = 5;
+  const cc = $("#cupidCanvas"), cctx = cc.getContext("2d"), cwrap = $("#cupidWrap");
+  const C = { w: 0, h: 0, hearts: [], arrows: [], pops: [], hits: 0, running: false, last: 0, spawnIn: 0, lastShot: 0 };
+  $("#cupidGoal").textContent = CUPID_GOAL;
+  function enterCupid() { fitCanvas(cc, cctx, cwrap, C); drawCupid(); }
+  $("#cupidStartBtn").addEventListener("click", () => {
+    $("#cupidStart").hidden = true;
+    C.running = true; C.last = performance.now(); C.spawnIn = 0;
+    requestAnimationFrame(cupidLoop);
+  });
+  $("#cupidDone").addEventListener("click", () => complete("cupid"));
+  cc.addEventListener("pointerdown", () => {
+    if (!C.running) return;
+    const now = performance.now();
+    if (now - C.lastShot < 280) return;
+    C.lastShot = now;
+    C.arrows.push({ x: C.w / 2, y: C.h - 78 });
+    buzz(8);
+  });
+  function cupidLoop(t) {
+    if (!C.running) return;
+    const dt = Math.min(50, t - C.last) / 16.67;
+    C.last = t;
+    C.spawnIn -= dt * 16.67;
+    if (C.spawnIn <= 0 && C.hearts.length < 4) {
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      C.hearts.push({ x: dir > 0 ? -30 : C.w + 30, baseY: rand(50, C.h * 0.55), y: 0,
+                      vx: dir * rand(1.6, 2.6 + C.hits * 0.25), ph: rand(0, 6.28) });
+      C.spawnIn = rand(700, 1300);
+    }
+    for (const hh of C.hearts) { hh.x += hh.vx * dt; hh.ph += 0.06 * dt; hh.y = hh.baseY + Math.sin(hh.ph) * 14; }
+    for (const a of C.arrows) a.y -= 13 * dt;
+    for (const a of C.arrows) {
+      for (const hh of C.hearts) {
+        if (hh.hit || a.used || Math.abs(a.x - hh.x) > 26 || Math.abs(a.y - 4 - hh.y) > 24) continue;
+        hh.hit = a.used = true;
+        C.hits++;
+        C.pops.push({ x: hh.x, y: hh.y - 12, life: 40, text: "+1" });
+        const r = cc.getBoundingClientRect();
+        burst(26, r.left + hh.x, r.top + hh.y);
+        buzz(20);
+        $("#cupidCount").textContent = Math.min(C.hits, CUPID_GOAL);
+        $("#cupidBar").style.width = Math.min(100, (C.hits / CUPID_GOAL) * 100) + "%";
+      }
+    }
+    C.hearts = C.hearts.filter((hh) => !hh.hit && hh.x > -50 && hh.x < C.w + 50);
+    C.arrows = C.arrows.filter((a) => !a.used && a.y > -50);
+    C.pops = C.pops.filter((p) => (p.y -= 1.2 * dt, (p.life -= dt) > 0));
+    drawCupid();
+    if (C.hits >= CUPID_GOAL) {
+      C.running = false; C.hearts = []; C.arrows = [];
+      drawCupid();
+      const r = cwrap.getBoundingClientRect();
+      burst(170, r.left + r.width / 2, r.top + r.height / 2);
+      buzz([40, 60, 40]);
+      $("#cupidWin").hidden = false;
+      return;
+    }
+    requestAnimationFrame(cupidLoop);
+  }
+  function drawArrow(x, y) {
+    cctx.strokeStyle = "#ffd166"; cctx.lineWidth = 3;
+    cctx.beginPath(); cctx.moveTo(x, y); cctx.lineTo(x, y + 40); cctx.stroke();
+    cctx.fillStyle = "#ffe3ec";
+    cctx.beginPath(); cctx.moveTo(x, y - 10); cctx.lineTo(x - 6, y + 3); cctx.lineTo(x + 6, y + 3); cctx.fill();
+    cctx.fillStyle = "#ff4d8d";
+    cctx.beginPath(); cctx.moveTo(x, y + 30); cctx.lineTo(x - 7, y + 45); cctx.lineTo(x, y + 40); cctx.lineTo(x + 7, y + 45); cctx.fill();
+  }
+  function drawCupid() {
+    const { w, h } = C;
+    cctx.clearRect(0, 0, w, h);
+    cctx.strokeStyle = "rgba(255, 255, 255, .18)"; cctx.lineWidth = 2; cctx.setLineDash([6, 10]);
+    cctx.beginPath(); cctx.moveTo(w / 2, h - 84); cctx.lineTo(w / 2, 10); cctx.stroke();
+    cctx.setLineDash([]);
+    cctx.textAlign = "center"; cctx.textBaseline = "middle";
+    cctx.font = "40px serif";
+    for (const hh of C.hearts) cctx.fillText("💗", hh.x, hh.y);
+    for (const a of C.arrows) drawArrow(a.x, a.y);
+    cctx.save();
+    cctx.translate(w / 2, h - 44); cctx.rotate(-Math.PI / 4);
+    cctx.font = "54px serif"; cctx.fillText("🏹", 0, 0);
+    cctx.restore();
+    cctx.font = "700 22px Quicksand, sans-serif"; cctx.fillStyle = "#ffe3ec";
+    for (const p of C.pops) { cctx.globalAlpha = Math.max(0, p.life / 40); cctx.fillText(p.text, p.x, p.y); }
+    cctx.globalAlpha = 1;
+  }
+
+  // ---------- photo puzzle ----------
+  let puzzleBuilt = false;
+  const neighbours = (pos) => {
+    const r = Math.floor(pos / 3), c = pos % 3, out = [];
+    if (r > 0) out.push(pos - 3);
+    if (r < 2) out.push(pos + 3);
+    if (c > 0) out.push(pos - 1);
+    if (c < 2) out.push(pos + 1);
+    return out;
+  };
+  // a heart picture, used when no photo is set
+  function puzzleFallback() {
+    const cv = document.createElement("canvas");
+    cv.width = cv.height = 600;
+    const c = cv.getContext("2d");
+    const g = c.createLinearGradient(0, 0, 600, 600);
+    g.addColorStop(0, "#ff4d8d"); g.addColorStop(1, "#ff7a59");
+    c.fillStyle = g; c.fillRect(0, 0, 600, 600);
+    c.fillStyle = "rgba(255, 255, 255, .35)";
+    [[70, 70, 50], [530, 80, 40], [80, 530, 44], [520, 520, 56], [300, 560, 30], [40, 300, 26], [565, 300, 30]].forEach(([x, y, s]) => {
+      c.save(); c.translate(x, y); heartPath(c, s * 1.6); c.fill(); c.restore();
+    });
+    c.save(); c.translate(300, 350); c.fillStyle = "#fff8f3"; heartPath(c, 400); c.fill(); c.restore();
+    c.fillStyle = "#c2185b"; c.textAlign = "center"; c.textBaseline = "middle";
+    c.font = "700 66px 'Dancing Script', cursive"; c.fillText("I love you", 300, 262);
+    c.font = "700 46px 'Dancing Script', cursive"; c.fillText(CONFIG.toName, 300, 340);
+    return cv.toDataURL("image/jpeg", 0.9);
+  }
+  // crop a photo to a square so the pieces aren't stretched
+  function squareCrop(img) {
+    try {
+      const s = Math.min(img.naturalWidth, img.naturalHeight), cv = document.createElement("canvas");
+      cv.width = cv.height = 600;
+      cv.getContext("2d").drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, 600, 600);
+      return cv.toDataURL("image/jpeg", 0.9);
+    } catch (e) { return img.src; }
+  }
+  function enterPuzzle() {
+    if (puzzleBuilt) return;
+    puzzleBuilt = true;
+    if (!CONFIG.puzzlePhoto) return buildPuzzle(puzzleFallback());
+    const img = new Image();
+    img.onload = () => buildPuzzle(squareCrop(img));
+    img.onerror = () => buildPuzzle(puzzleFallback());
+    img.src = CONFIG.puzzlePhoto;
+  }
+  function buildPuzzle(src) {
+    $("#peek").src = src;
+    const board = $("#board");
+    const order = [0, 1, 2, 3, 4, 5, 6, 7, 8]; // order[position] = piece, 8 = the empty space
+    const isSolved = () => order.every((p, i) => p === i);
+    // shuffle with random legal slides, so the puzzle can always be solved
+    let empty = 8, prev = -1;
+    for (let i = 0; i < 150 || isSolved(); i++) {
+      const opts = neighbours(empty).filter((p) => p !== prev);
+      const pick = opts[(Math.random() * opts.length) | 0];
+      [order[empty], order[pick]] = [order[pick], order[empty]];
+      prev = empty; empty = pick;
+    }
+    const pieces = [];
+    for (let k = 0; k < 8; k++) {
+      const el = document.createElement("button");
+      el.className = "piece";
+      el.style.backgroundImage = 'url("' + src + '")';
+      el.style.backgroundPosition = (k % 3) * 50 + "% " + Math.floor(k / 3) * 50 + "%";
+      el.innerHTML = "<span></span>";
+      el.firstChild.textContent = k + 1;
+      el.setAttribute("aria-label", "Piece " + (k + 1));
+      el.addEventListener("click", () => slide(k));
+      board.appendChild(el);
+      pieces[k] = el;
+    }
+    let moves = 0, solved = false;
+    const place = () => order.forEach((p, pos) => {
+      if (p === 8) return;
+      pieces[p].style.left = (pos % 3) * 33.333 + "%";
+      pieces[p].style.top = Math.floor(pos / 3) * 33.333 + "%";
+    });
+    function slide(k) {
+      if (solved) return;
+      const pos = order.indexOf(k), gap = order.indexOf(8);
+      if (!neighbours(gap).includes(pos)) return;
+      [order[pos], order[gap]] = [order[gap], order[pos]];
+      $("#moves").textContent = ++moves;
+      buzz(8);
+      place();
+      if (!isSolved()) return;
+      solved = true;
+      const last = document.createElement("div");
+      last.className = "piece last";
+      last.style.backgroundImage = 'url("' + src + '")';
+      last.style.backgroundPosition = "100% 100%";
+      last.style.left = last.style.top = "66.666%";
+      board.appendChild(last);
+      board.classList.add("solved");
+      const r = board.getBoundingClientRect();
+      burst(180, r.left + r.width / 2, r.top + r.height / 2);
+      buzz([40, 60, 40]);
+      setTimeout(() => { $("#puzzleDone").hidden = false; }, 600);
+    }
+    place();
+  }
+  $("#puzzleDone").addEventListener("click", () => complete("puzzle"));
 
   // ---------- the question ----------
   // "No" does nothing — except make "Yes" a little harder to resist 😄
@@ -653,13 +1007,18 @@
     $("#letterActions").hidden = false;
   }
   $("#moreLove").addEventListener("click", (e) => { burst(120, e.clientX, e.clientY); rain(40); buzz(25); });
-  $("#replayBtn").addEventListener("click", () => location.reload());
+  $("#replayBtn").addEventListener("click", () => {
+    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+    location.reload();
+  });
 
   // ---------- resize ----------
   sizeFx();
   addEventListener("resize", () => {
     sizeFx();
     if (current === "game") { sizeGame(); drawGame(); }
+    if (current === "cupid") { fitCanvas(cc, cctx, cwrap, C); drawCupid(); }
+
   });
 })();
 </script>

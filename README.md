@@ -3,33 +3,41 @@
 Two separate surprise mini-games that run in any phone browser. Each one is a single
 HTML file with no app to install and nothing to build.
 
-| Project | Folder | Flow |
-|---|---|---|
-| 💘 **Valentine** | [`valentine/`](valentine/valentine.html) | Envelope → catch hearts → memory match → scratch card → "Will you be my Valentine?" → love letter |
-| 🎂 **Birthday** | [`birthday/`](birthday/birthday.html) | Envelope → pop balloons → memory match → unwrap the gift → blow out the candles → birthday card |
+| Project | Folder | Games on the map | Final surprise |
+|---|---|---|---|
+| 💘 **Valentine** | [`valentine/`](valentine/valentine.html) | Catch my heart · Find the pairs · Secret scratch card · Cupid's Arrow · Photo puzzle | "Will you be my Valentine?" → love letter |
+| 🎂 **Birthday** | [`birthday/`](birthday/birthday.html) | Pop the balloons · Find the pairs · Unwrap the gift · Cake Stacker · Spin the Wheel | Blow out the candles → birthday card |
 
-## 💘 Valentine
+## How it works
 
-1. **Envelope**: "Hey *name*, someone made you a little surprise…"
-2. **Catch my heart**: they drag a basket to catch 💖 (💝 counts double, 💔 takes one away).
-3. **Memory match**: they flip cards to find 6 pairs (💖 🌹 💌 🍫 🧸 💍).
-4. **Scratch card**: they rub the card with a finger to reveal your secret message (`secret` in CONFIG).
-5. **"Will you be my Valentine?"**: tapping **No** does nothing except make **Yes** bigger each time 😄
-6. **Love letter**: it types itself out, with optional photos and your signature.
+After the envelope, a **game map** shows all 5 games. They can be played in any order. Each finished
+game lights up a ❤️ (Valentine) or ⭐ (Birthday), and the final surprise unlocks when all 5 are done.
+A ← button in each game goes back to the map. Progress is remembered if the page is closed, and
+**Replay** on the last screen starts over.
 
-## 🎂 Birthday
+## 💘 Valentine games
 
-1. **Envelope**: "Hey *name*, it's your special day…"
-2. **Pop the balloons**: they tap the rising 🎈 to pop them (🎁 counts double).
-3. **Memory match**: they flip cards to find 6 party pairs (🎂 🎁 🎈 🥳 🍰 🎉).
-4. **Unwrap the gift**: they tap the present 8 times until it opens and shows your gift message (`giftMessage` in CONFIG).
-5. **Cake**: they tap the flames, or tap 🎤 and really blow into the phone. Confetti and a *Happy Birthday* tune follow.
-6. **Birthday card**: your message types itself out.
+- **Catch my heart**: drag a basket to catch 💖 (💝 counts double, 💔 takes one away).
+- **Find the pairs**: flip cards to match 6 pairs (💖 🌹 💌 🍫 🧸 💍).
+- **Secret scratch card**: rub the card to reveal your message (`secret`).
+- **Cupid's Arrow**: tap to shoot arrows straight up and hit 5 flying hearts.
+- **Photo puzzle**: slide the pieces back into place (3×3). Uses `puzzlePhoto`, or a heart picture with their name.
+- **Final**: "Will you be my Valentine?" (No does nothing, Yes grows) → the love letter.
+
+## 🎂 Birthday games
+
+- **Pop the balloons**: tap the rising 🎈 (🎁 counts double).
+- **Find the pairs**: flip cards to match 6 party pairs (🎂 🎁 🎈 🥳 🍰 🎉).
+- **Unwrap the gift**: tap the present 8 times to reveal `giftMessage`.
+- **Cake Stacker**: tap to drop sliding cake layers; whatever hangs over the edge falls off. Stack 8 to win.
+- **Spin the Wheel**: spin for a prize from `wheelPrizes`. Set `wheelWinner` to a number to always land on that prize (0 = first).
+- **Final**: blow out the candles (tap, or 🎤 blow into the phone) → the birthday card.
 
 ## Personalise
 
 Open `valentine/valentine.html` or `birthday/birthday.html` and edit the `CONFIG` block near the top: names, the
-letter text, and optional `photos` / `music`. The birthday version also has `age`, which sets the number of candles.
+letter text, and optional `photos` / `music`. Valentine also has `secret` and `puzzlePhoto`; Birthday has `age`
+(number of candles), `giftMessage`, `wheelPrizes` and `wheelWinner`.
 
 Photos and music go next to the file, for example `valentine/photos/us1.jpg` with
 `photos: ["photos/us1.jpg"]`.
