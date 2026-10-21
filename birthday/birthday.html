@@ -295,6 +295,82 @@
     background: var(--glass); color: #fff; font-size: 20px; cursor: pointer;
   }
 
+  /* ---------- fit any screen ---------- */
+  /* tablets and computers: make everything bigger */
+  @media (min-width: 700px) and (min-height: 700px) {
+    h1 { font-size: 72px; }
+    h2 { font-size: 52px; }
+    p { font-size: 19px; }
+    .hud h2 { font-size: 46px; }
+    .hud p { font-size: 17px; }
+    .btn { font-size: 20px; min-height: 56px; padding: 16px 36px; }
+    .envelope { zoom: 1.3; }
+    .tiles, .tile.final { max-width: 640px; }
+    .tiles { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .tile { min-height: 140px; font-size: 17px; }
+    .tile-icon { font-size: 48px; }
+    .game-wrap { max-width: 640px; }
+    .card { max-width: 640px; padding: 40px 36px 34px; }
+    .card p { font-size: 20px; }
+    .cake { zoom: 1.35; }
+    .wheel-box { width: 420px; }
+    .shell-stage { zoom: 1.25; }
+    .gift-btn { font-size: 170px; }
+    .gift-reveal { max-width: 480px; font-size: 32px; }
+  }
+  /* phones turned sideways and other short screens */
+  @media (orientation: landscape) and (max-height: 560px) {
+    .scene {
+      padding: max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+               max(10px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    }
+    body.in-game .scene.active { padding-top: calc(max(10px, env(safe-area-inset-top)) + 54px); }
+    h1 { font-size: 36px; }
+    h2 { font-size: 28px; }
+    p { font-size: 14px; margin-bottom: 8px; }
+    .btn { min-height: 44px; padding: 10px 24px; font-size: 16px; }
+    .overlay .big { font-size: 44px; }
+    /* canvas games: instructions on the left, play area on the right */
+    .scene.active.play { flex-direction: row; align-items: stretch; gap: 20px; }
+    .play .hud { width: 34%; max-width: 300px; align-self: center; }
+    .play .hud h2 { font-size: 26px; }
+    .play .game-wrap { max-width: none; height: 100%; }
+    /* picture on the left, words on the right */
+    .scene.active.split {
+      display: grid; grid-template-columns: auto minmax(0, 380px); grid-auto-rows: min-content;
+      column-gap: 36px; align-content: center; justify-content: center; align-items: center; justify-items: center;
+    }
+    .split > .visual { grid-column: 1; grid-row: 1 / span 8; margin: 0; }
+    .split > :not(.visual) { grid-column: 2; }
+    .envelope { zoom: .8; }
+    .tiles, .tile.final { max-width: 760px; }
+    .tiles { grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 8px 0; }
+    .tile { min-height: 96px; padding: 10px 6px; font-size: 13px; }
+    .tile-icon { font-size: 32px; }
+    .tile.final { min-height: 64px; margin-bottom: 8px; }
+    .map-progress { font-size: 20px; }
+    .cake { zoom: .72; }
+    .wheel-box { width: min(300px, calc(100vh - 90px)); width: min(300px, calc(100dvh - 90px)); margin-top: 18px; }
+    .shell-stage { width: 320px; height: 150px; margin-top: 92px; }
+    .gift-btn { font-size: 96px; margin: 0; }
+    .gift-reveal { font-size: 22px; padding: 18px; margin: 8px 0 12px; }
+  }
+
+  /* short phones held upright (e.g. iPhone SE) */
+  @media (orientation: portrait) and (max-height: 760px) {
+    .shell-stage { margin-top: 56px; height: 156px; }
+  }
+  @media (orientation: portrait) and (max-height: 640px) {
+    h2 { font-size: 30px; }
+    p { font-size: 15px; }
+    .cake { zoom: .85; margin: 12px 0 16px; }
+    .board { width: min(330px, 100%, calc(100vh - 290px)); }
+    .shell-stage { margin-top: 50px; height: 150px; }
+  }
+  /* wide but short laptop screens */
+  @media (min-width: 600px) and (min-height: 561px) and (max-height: 700px) {
+    #match .grid { max-width: 340px; }
+  }
   @media (prefers-reduced-motion: reduce) {
     .envelope, .flame { animation: none; }
     .scene.active { animation: none; }
@@ -333,8 +409,8 @@
 
 <main>
   <!-- Intro -->
-  <section class="scene active" id="intro">
-    <div class="envelope" aria-hidden="true"><span class="seal">🎂</span></div>
+  <section class="scene split active" id="intro">
+    <div class="envelope visual" aria-hidden="true"><span class="seal">🎂</span></div>
     <h1>Hey <span data-to></span>,</h1>
     <p>It's your special day — someone made you a surprise…</p>
     <p style="opacity:.75;font-size:15px">Turn your sound on 🔊</p>
@@ -355,7 +431,7 @@
   </section>
 
   <!-- Mini-game -->
-  <section class="scene" id="game">
+  <section class="scene play" id="game">
     <div class="hud">
       <h2>Pop the balloons</h2>
       <p>Tap 🎈 to pop them · 🎁 counts double</p>
@@ -380,11 +456,11 @@
   </section>
 
   <!-- Find the gift (shell game) -->
-  <section class="scene" id="shell">
+  <section class="scene split" id="shell">
     <h2>Find the gift</h2>
     <p id="shellHint">A gift hides under one hat. Watch it closely, then find it after the shuffle!</p>
     <p class="taps">Round <span id="shellRound">1</span> / <span id="shellTotal"></span></p>
-    <div class="shell-stage" id="shellStage">
+    <div class="shell-stage visual" id="shellStage">
       <div class="shell-gift" id="shellGift" aria-hidden="true">🎁</div>
       <button class="hat" aria-label="Hat 1"><span class="cone"></span><span class="pom"></span><span class="brim"></span></button>
       <button class="hat" aria-label="Hat 2"><span class="cone"></span><span class="pom"></span><span class="brim"></span></button>
@@ -405,7 +481,7 @@
   </section>
 
   <!-- Cake stacker -->
-  <section class="scene" id="stack">
+  <section class="scene play" id="stack">
     <div class="hud">
       <h2>Cake Stacker</h2>
       <p>Tap to drop each layer on top of the one below</p>
@@ -434,10 +510,10 @@
   </section>
 
   <!-- Spin the wheel -->
-  <section class="scene" id="wheel">
+  <section class="scene split" id="wheel">
     <h2>Spin the Wheel</h2>
     <p id="wheelHint">Spin it to win your birthday prize!</p>
-    <div class="wheel-box">
+    <div class="wheel-box visual">
       <div class="wheel-pointer" aria-hidden="true">▼</div>
       <canvas id="wheelCanvas" aria-label="Prize wheel"></canvas>
       <button class="wheel-hub" id="spinBtn">SPIN</button>
@@ -447,10 +523,10 @@
   </section>
 
   <!-- Birthday cake -->
-  <section class="scene" id="cake">
+  <section class="scene split" id="cake">
     <h2 id="cakeTitle">Make a wish, <span data-to></span>!</h2>
     <p id="cakeHint">Tap the flames to blow out the candles<br>— or tap 🎤 and really blow on your phone</p>
-    <div class="cake" aria-label="Birthday cake">
+    <div class="cake visual" aria-label="Birthday cake">
       <div class="candles" id="candles"></div>
       <div class="tier top"><span class="age" id="ageNum"></span></div>
       <div class="tier bottom"></div>
@@ -1194,6 +1270,7 @@
     sizeFx();
     if (current === "game") { sizeGame(); drawGame(); }
     if (current === "stack") { fitCanvas(sc, sctx, swrap, S); drawStack(); }
+    if (current === "wheel") enterWheel();
 
   });
 })();

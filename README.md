@@ -58,4 +58,10 @@ Any static host works, and each folder gets its own link:
 Each folder has a tiny `index.html` that jumps straight to the game, which keeps the
 links short. The long form (`…/valentine/valentine.html`) works too.
 
+## Works on any screen
+
+Both pages adapt to the device: phones (small to large), phones turned sideways (instructions on the
+left, game on the right, so nothing needs scrolling), tablets and computers (bigger text, cards and
+games). Rotating the phone mid-game re-fits the play area.
+
 The 🎤 blow feature needs an `https://` link. If the mic isn't allowed, tapping the flames still works.
