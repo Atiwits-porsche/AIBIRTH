@@ -13,7 +13,8 @@ HTML file with no app to install and nothing to build.
 After the envelope, a **game map** shows all 5 games. They can be played in any order. Each finished
 game lights up a ❤️ (Valentine) or ⭐ (Birthday), and the final surprise unlocks when all 5 are done.
 A ← button in each game goes back to the map. In every Valentine game, a **Kiss me 💋** button
-skips just that game (it counts as finished) and goes back to the map. Progress is remembered if the page is closed, and
+skips just that game (it counts as finished) and goes back to the map. Birthday games have a
+**Hug me 🤗** button that works the same way. Progress is remembered if the page is closed, and
 **Replay** on the last screen starts over.
 
 ## 💘 Valentine games
